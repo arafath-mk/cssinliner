@@ -8,6 +8,7 @@ use std::path::Path;
 #[derive(serde::Deserialize, Clone)]
 pub struct Settings {
     pub html_input_file: String,
+    pub output_dir: String,
     pub html_output_file: String,
 }
 
@@ -15,20 +16,21 @@ fn main() {
     // Settings.
     let settings = Settings {
         html_input_file: String::from("input.html"),
-        html_output_file: String::from("dist/minified/index.html"),
+        output_dir: String::from("dist/"),
+        html_output_file: String::from("minified/index.html"),
     };
 
     // Path variables based on the settings.
     let html_input_file = Path::new(&settings.html_input_file).to_path_buf();
-    let html_output_file = Path::new(&settings.html_output_file).to_path_buf();
+    let html_output_file =
+        Path::new(&settings.output_dir).join(Path::new(&settings.html_output_file).to_path_buf());
 
     // Output Path directory based on the output file path.
-    let mut output_dir = Path::new(&settings.html_output_file).to_path_buf();
-    output_dir.pop();
+    let html_output_dir = html_output_file.parent().unwrap().to_path_buf();
 
     // Create the ouput folder, if it is not already existing.
-    if !output_dir.is_dir() {
-        fs::create_dir_all(&output_dir).unwrap();
+    if !html_output_dir.is_dir() {
+        fs::create_dir_all(&html_output_dir).unwrap();
     }
 
     // Remove the output html file, if it is existing.

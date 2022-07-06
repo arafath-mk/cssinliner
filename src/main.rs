@@ -37,7 +37,7 @@ fn main() {
         .unwrap();
 
     // Read external css files and insert contents of them as inline css styles into the html.
-    const LINK_TAG_SELECTOR: &str = "link";
+    const LINK_TAG_SELECTOR: &str = r#"link[rel="stylesheet"]:not([href*="?external"])"#;
 
     let link_tag_matches = document.select(LINK_TAG_SELECTOR).unwrap();
     // Note: Have to traverse in the reverse order.
@@ -45,10 +45,12 @@ fn main() {
     for link_tag_match in link_tag_matches.rev() {
         let link_node = link_tag_match.as_node();
 
+        // Read the attributes of the link tag.
         let attributes = link_tag_match.attributes.borrow();
         let rel_attr_val = attributes.get("rel").unwrap();
         let href_attr_val = attributes.get("href").unwrap();
 
+        // Need to consider only the link tags with non empty hrefs.
         if rel_attr_val == "stylesheet" && href_attr_val.trim() != "" {
             let new_style_node =
                 NodeRef::new_element(QualName::new(None, ns!(html), local_name!("style")), None);

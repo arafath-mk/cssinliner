@@ -25,15 +25,7 @@ fn main() {
     let html_output_file =
         Path::new(&settings.output_dir).join(Path::new(&settings.html_output_file).to_path_buf());
 
-    // Output Path directory based on the output file path.
-    let html_output_dir = html_output_file.parent().unwrap().to_path_buf();
-
-    // Create the ouput folder, if it is not already existing.
-    if !html_output_dir.is_dir() {
-        fs::create_dir_all(&html_output_dir).unwrap();
-    }
-
-    // Remove the output html file, if it is existing.
+    // Cleanup: Remove the output html file, if it is existing.
     if html_output_file.is_file() {
         fs::remove_file(&html_output_file).unwrap();
     }
@@ -49,7 +41,7 @@ fn main() {
 
     let link_tag_matches = document.select(LINK_TAG_SELECTOR).unwrap();
     // Note: Have to traverse in the reverse order.
-    //       Otherwise, add/remove multiple html elements are not working as expected.
+    //       Otherwise, adding/removing of multiple html elements are not working as expected.
     for link_tag_match in link_tag_matches.rev() {
         let link_node = link_tag_match.as_node();
 
@@ -67,6 +59,14 @@ fn main() {
         }
     }
 
-    // Write the output html file.
+    // Output: Directory of the output html file.
+    let html_output_dir = html_output_file.parent().unwrap().to_path_buf();
+
+    // Output: Create the ouput folder, if it is not already existing.
+    if !html_output_dir.is_dir() {
+        fs::create_dir_all(&html_output_dir).unwrap();
+    }
+
+    // Output: Write the output html file.
     document.serialize_to_file(html_output_file).unwrap();
 }

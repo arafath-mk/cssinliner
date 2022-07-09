@@ -1,0 +1,5 @@
+{
+    "htmlInputFile": "dist/index.html",
+    "outputDir": "dist/",
+    "htmlOutputFile": "inlined/index.html"
+}

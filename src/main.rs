@@ -3,7 +3,7 @@ extern crate kuchiki;
 use html5ever::{interface::QualName, local_name, namespace_url, ns};
 use kuchiki::{traits::*, NodeRef};
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 #[derive(serde::Deserialize, Clone)]
 pub struct Settings {
@@ -14,11 +14,16 @@ pub struct Settings {
 
 fn main() {
     // Settings.
-    let settings = Settings {
-        html_input_file: String::from("input.html"),
-        output_dir: String::from("dist/"),
-        html_output_file: String::from("minified/index.html"),
-    };
+    const CONFIG_FILE: &str = "cssinliner.json";
+    let settings_result = get_settings(CONFIG_FILE);
+    let settings: Settings;
+    match settings_result {
+        None => {
+            println!("Could not read the configuration file {}", CONFIG_FILE);
+            return;
+        }
+        Some(s) => settings = s,
+    }
 
     // Path variables based on the settings.
     let html_input_file = Path::new(&settings.html_input_file).to_path_buf();
@@ -34,7 +39,10 @@ fn main() {
     let document = kuchiki::parse_html()
         .from_utf8()
         .from_file(&html_input_file)
-        .unwrap();
+        .expect(&format!(
+            "Error occured while reading an input html file {:?}",
+            html_input_file
+        ));
 
     // Read external css files and insert contents of them as inline css styles into the html.
     const LINK_TAG_SELECTOR: &str = r#"link[rel="stylesheet"]:not([href*="?external"])"#;
@@ -55,7 +63,34 @@ fn main() {
             let new_style_node =
                 NodeRef::new_element(QualName::new(None, ns!(html), local_name!("style")), None);
 
-            new_style_node.append(NodeRef::new_text(".b{color:blue}"));
+            // CSS File: Get the external css file name.
+            let mut css_file_dir = PathBuf::from(&settings.html_input_file);
+            css_file_dir.pop();
+            let href_path = Path::new(&href_attr_val);
+            let prefix_stripped_result = href_path.strip_prefix("/");
+            let mut prefix_stripped_href_path = href_path;
+            match prefix_stripped_result {
+                Ok(prefix_stripped) => prefix_stripped_href_path = prefix_stripped,
+                Err(_) => {}
+            };
+
+            let css_file = css_file_dir.join(prefix_stripped_href_path);
+            if !css_file.is_file() {
+                eprintln!("Could not find the CSS file: {:?}", css_file.to_str());
+                continue;
+            }
+
+            // CSS File: Read the external css file contents.
+            let css_file_content_result = fs::read_to_string(css_file);
+            let css_file_content = match css_file_content_result {
+                Ok(css_file_content) => css_file_content,
+                Err(err) => {
+                    eprintln!("Error while reading CSS file. Error: {}", err);
+                    continue;
+                }
+            };
+
+            new_style_node.append(NodeRef::new_text(css_file_content));
             link_node.insert_before(new_style_node);
             link_node.detach(); // Note:  Have to traverse the for loop items in reverse order. Otherwise, this is not working as expected.
         }
@@ -71,4 +106,61 @@ fn main() {
 
     // Output: Write the output html file.
     document.serialize_to_file(html_output_file).unwrap();
+}
+
+fn get_settings(json_file: &str) -> Option<Settings> {
+    // Read the contents of the json file.
+    let data_result = fs::read_to_string(json_file);
+    let data: String;
+    match data_result {
+        Err(err) => {
+            eprintln!("Could not read the file: {} Error: {}", &json_file, err);
+            return None;
+        }
+        Ok(d) => {
+            data = d;
+        }
+    }
+
+    // Parse the json string.
+    let json_result = serde_json::from_str(&data);
+    let json: serde_json::Value;
+    match json_result {
+        Err(err) => {
+            eprintln!(
+                "JSON file does not have correct format: {} Error: {}",
+                &json_file, err
+            );
+            return None;
+        }
+        Ok(j) => {
+            json = j;
+        }
+    }
+
+    let hif = get_json_str_val(&json, "htmlInputFile")?;
+    let od = get_json_str_val(&json, "outputDir")?;
+    let hof = get_json_str_val(&json, "htmlOutputFile")?;
+
+    let settings = Settings {
+        html_input_file: String::from(hif),
+        output_dir: String::from(od),
+        html_output_file: String::from(hof),
+    };
+
+    return Some(settings);
+}
+
+fn get_json_str_val<'a>(json: &'a serde_json::Value, field_name: &str) -> Option<&'a str> {
+    let hif_opt = json.get(field_name);
+    match hif_opt {
+        Some(hif_val) => hif_val.as_str(),
+        None => {
+            println!(
+                "Could not get value of the field {} from json file",
+                field_name
+            );
+            return None;
+        }
+    }
 }

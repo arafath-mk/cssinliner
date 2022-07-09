@@ -15,9 +15,8 @@ pub struct Settings {
 fn main() {
     // Settings.
     const CONFIG_FILE: &str = "cssinliner.json";
-    let settings_result = get_settings(CONFIG_FILE);
     let settings: Settings;
-    match settings_result {
+    match get_settings(CONFIG_FILE) {
         None => {
             eprintln!("Could not read the configuration file {}", CONFIG_FILE);
             return;

@@ -81,8 +81,20 @@ fn main() {
 
         // Read the attributes of the link tag.
         let attributes = link_tag_match.attributes.borrow();
-        let rel_attr_val = attributes.get("rel").unwrap();
-        let href_attr_val = attributes.get("href").unwrap();
+        let rel_attr_val = match attributes.get("rel") {
+            None => {
+                eprintln!("Could not read the attribute 'rel'.");
+                continue;
+            }
+            Some(v) => v,
+        };
+        let href_attr_val = match attributes.get("href") {
+            None => {
+                eprintln!("Could not read the attribute 'href'.");
+                continue;
+            }
+            Some(v) => v,
+        };
 
         // Need to consider only the link tags with non empty hrefs.
         if rel_attr_val == "stylesheet" && href_attr_val.trim() != "" {

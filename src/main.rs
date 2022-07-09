@@ -135,15 +135,36 @@ fn main() {
     }
 
     // Output: Directory of the output html file.
-    let html_output_dir = html_output_file.parent().unwrap().to_path_buf();
+    let html_output_dir = match html_output_file.parent() {
+        None => {
+            eprintln!("Could not get the directory for saving the output html file.");
+            return;
+        }
+        Some(d) => d,
+    };
 
     // Output: Create the ouput folder, if it is not already existing.
     if !html_output_dir.is_dir() {
-        fs::create_dir_all(&html_output_dir).unwrap();
+        match fs::create_dir_all(&html_output_dir) {
+            Err(err) => {
+                eprintln!(
+                    "Could not create the directory for saving the output html file. Error: {}",
+                    err
+                );
+                return;
+            }
+            Ok(_) => {}
+        }
     }
 
     // Output: Write the output html file.
-    document.serialize_to_file(html_output_file).unwrap();
+    match document.serialize_to_file(html_output_file) {
+        Err(err) => {
+            eprintln!("Could not write the output html file. Error: {}", err);
+            return;
+        }
+        Ok(_) => {}
+    }
 }
 
 fn get_settings(json_file: &str) -> Option<Settings> {

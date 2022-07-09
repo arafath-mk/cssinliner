@@ -211,9 +211,8 @@ fn get_settings(json_file: &str) -> Option<Settings> {
 }
 
 fn get_json_str_val<'a>(json: &'a serde_json::Value, field_name: &str) -> Option<&'a str> {
-    let hif_opt = json.get(field_name);
-    match hif_opt {
-        Some(hif_val) => hif_val.as_str(),
+    match json.get(field_name) {
+        Some(val) => val.as_str(),
         None => {
             println!(
                 "Could not get value of the field {} from json file",

@@ -47,8 +47,7 @@ fn main() {
         .from_utf8()
         .from_file(&html_input_file);
 
-    let document;
-    match document_result {
+    let document = match document_result {
         Err(err) => {
             eprintln!(
                 "Error occured while reading an input html file {:?} Error: {}",
@@ -56,8 +55,8 @@ fn main() {
             );
             return;
         }
-        Ok(d) => document = d,
-    }
+        Ok(d) => d,
+    };
 
     // Read external css files and insert contents of them as inline css styles into the html.
     const LINK_TAG_SELECTOR: &str = r#"link[rel="stylesheet"]:not([href*="?external"])"#;

@@ -15,7 +15,7 @@ pub struct Settings {
 fn main() {
     // Settings.
     const CONFIG_FILE: &str = "cssinliner.json";
-    let settings: Settings;
+    let settings;
     match get_settings(CONFIG_FILE) {
         None => {
             eprintln!("Could not read the configuration file {}", CONFIG_FILE);
@@ -48,7 +48,7 @@ fn main() {
         .from_utf8()
         .from_file(&html_input_file);
 
-    let document: NodeRef;
+    let document;
     match document_result {
         Err(err) => {
             eprintln!(
@@ -63,7 +63,19 @@ fn main() {
     // Read external css files and insert contents of them as inline css styles into the html.
     const LINK_TAG_SELECTOR: &str = r#"link[rel="stylesheet"]:not([href*="?external"])"#;
 
-    let link_tag_matches = document.select(LINK_TAG_SELECTOR).unwrap();
+    // let link_tag_matches = document.select(LINK_TAG_SELECTOR).unwrap();
+    let link_tag_matches;
+    match document.select(LINK_TAG_SELECTOR) {
+        Err(err) => {
+            eprintln!(
+                "Could not get link tags from the html file {:?} Error: {:?}",
+                html_input_file, err
+            );
+            return;
+        }
+        Ok(l) => link_tag_matches = l,
+    }
+
     // Note: Have to traverse in the reverse order.
     //       Otherwise, adding/removing of multiple html elements are not working as expected.
     for link_tag_match in link_tag_matches.rev() {

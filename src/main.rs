@@ -50,7 +50,7 @@ fn main() {
     let document = match document_result {
         Err(err) => {
             eprintln!(
-                "Error occured while reading an input html file {:?} Error: {}",
+                "Error occured while reading the input html file {:?} Error: {}",
                 html_input_file, err
             );
             return;

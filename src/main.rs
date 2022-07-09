@@ -15,14 +15,13 @@ pub struct Settings {
 fn main() {
     // Settings.
     const CONFIG_FILE: &str = "cssinliner.json";
-    let settings;
-    match get_settings(CONFIG_FILE) {
+    let settings = match get_settings(CONFIG_FILE) {
         None => {
             eprintln!("Could not read the configuration file {}", CONFIG_FILE);
             return;
         }
-        Some(s) => settings = s,
-    }
+        Some(s) => s,
+    };
 
     // Path variables based on the settings.
     let html_input_file = Path::new(&settings.html_input_file).to_path_buf();

@@ -19,7 +19,7 @@ fn main() {
     let settings: Settings;
     match settings_result {
         None => {
-            println!("Could not read the configuration file {}", CONFIG_FILE);
+            eprintln!("Could not read the configuration file {}", CONFIG_FILE);
             return;
         }
         Some(s) => settings = s,
@@ -32,17 +32,34 @@ fn main() {
 
     // Cleanup: Remove the output html file, if it is existing.
     if html_output_file.is_file() {
-        fs::remove_file(&html_output_file).unwrap();
+        match fs::remove_file(&html_output_file) {
+            Err(err) => {
+                eprintln!(
+                    "Could not remove the existing file {:?} Error:{}",
+                    html_output_file, err
+                );
+                return;
+            }
+            Ok(_) => {}
+        }
     }
 
     // Read and parse the input html file.
-    let document = kuchiki::parse_html()
+    let document_result = kuchiki::parse_html()
         .from_utf8()
-        .from_file(&html_input_file)
-        .expect(&format!(
-            "Error occured while reading an input html file {:?}",
-            html_input_file
-        ));
+        .from_file(&html_input_file);
+
+    let document: NodeRef;
+    match document_result {
+        Err(err) => {
+            eprintln!(
+                "Error occured while reading an input html file {:?} Error: {}",
+                html_input_file, err
+            );
+            return;
+        }
+        Ok(d) => document = d,
+    }
 
     // Read external css files and insert contents of them as inline css styles into the html.
     const LINK_TAG_SELECTOR: &str = r#"link[rel="stylesheet"]:not([href*="?external"])"#;

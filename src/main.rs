@@ -126,9 +126,12 @@ fn main() {
                 }
             };
 
+            // Insert contents of the css file as inline style.
             new_style_node.append(NodeRef::new_text(css_file_content));
             let link_node = link_tag_match.as_node();
             link_node.insert_before(new_style_node);
+
+            // Remove the link node.
             link_node.detach(); // Note:  Have to traverse the for loop items in reverse order. Otherwise, this is not working as expected.
         }
     }

@@ -77,8 +77,6 @@ fn main() {
     // Note: Have to traverse in the reverse order.
     //       Otherwise, adding/removing of multiple html elements are not working as expected.
     for link_tag_match in link_tag_matches.rev() {
-        let link_node = link_tag_match.as_node();
-
         // Read the attributes of the link tag.
         let attributes = link_tag_match.attributes.borrow();
         let rel_attr_val = match attributes.get("rel") {
@@ -129,6 +127,7 @@ fn main() {
             };
 
             new_style_node.append(NodeRef::new_text(css_file_content));
+            let link_node = link_tag_match.as_node();
             link_node.insert_before(new_style_node);
             link_node.detach(); // Note:  Have to traverse the for loop items in reverse order. Otherwise, this is not working as expected.
         }

@@ -29,7 +29,7 @@ fn main() {
         Path::new(&settings.output_dir).join(Path::new(&settings.html_output_file).to_path_buf());
 
     // Cleanup: Remove the output html file, if it is existing.
-    if html_output_file.is_file() {
+    if html_output_file.is_file() && !html_input_file.eq(&html_output_file) {
         match fs::remove_file(&html_output_file) {
             Err(err) => {
                 eprintln!(
